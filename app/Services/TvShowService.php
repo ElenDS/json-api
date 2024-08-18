@@ -26,12 +26,20 @@ class TvShowService
     {
         $cacheKey = 'tv_shows_search_' . $this->query;
 
+        if (Redis::exists($cacheKey)) {
+            $cacheData = Redis::get($cacheKey);
+            return json_decode($cacheData, true);
+        }
+
         $response = Http::get($this->apiUrl, ['q' => $this->query]);
 
         if ($response->successful()) {
             $data = $response->json();
+            $processedData = $this->processResponse($data);
 
-            return $this->processResponse($data);
+            Redis::setex($cacheKey, 3600, json_encode($processedData));
+
+            return $processedData;
         } else {
             throw new TvShowApiRequestException();
         }
