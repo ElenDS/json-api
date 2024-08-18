@@ -1,0 +1,34 @@
+services:
+    php:
+        image: php:8.3-fpm
+        container_name: php_${APP_NAME}
+        build:
+            context: ./
+            dockerfile: docker/php/Dockerfile
+        volumes:
+            - ./:/var/www/html
+        networks:
+            - app-network
+
+    nginx:
+        image: nginx:latest
+        container_name: nginx_${APP_NAME}
+        volumes:
+            - ./:/var/www/html
+            - ./docker/nginx:/etc/nginx/conf.d
+        ports:
+            - "80:80"
+        depends_on:
+            - php
+        networks:
+            - app-network
+
+    redis:
+        image: redis:latest
+        container_name: redis_${APP_NAME}
+        networks:
+            - app-network
+
+networks:
+    app-network:
+        driver: bridge
